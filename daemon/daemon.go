@@ -1486,11 +1486,18 @@ func (h *patchConfig) Handle(params PatchConfigParams) middleware.Responder {
 
 	d := h.daemon
 
+	cfgSpec := params.Configuration
+
+	om, err := option.DaemonOptionLibrary.ValidateConfigurationMap(cfgSpec.Options)
+	if err != nil {
+		msg := fmt.Errorf("Invalid configuration option %s", err)
+		return api.Error(PatchConfigFailureCode, msg)
+	}
+
 	// Serialize configuration updates to the daemon.
 	option.Config.ConfigPatchMutex.Lock()
 	defer option.Config.ConfigPatchMutex.Unlock()
 
-	cfgSpec := params.Configuration
 	nmArgs := d.nodeMonitor.GetArgs()
 	if numPagesEntry, ok := cfgSpec.Options["MonitorNumPages"]; ok && nmArgs[0] != numPagesEntry {
 		if len(nmArgs) == 0 || nmArgs[0] != numPagesEntry {
@@ -1532,7 +1539,7 @@ func (h *patchConfig) Handle(params PatchConfigParams) middleware.Responder {
 		log.Debug("finished configuring PolicyEnforcement for daemon")
 	}
 
-	changes += option.Config.Opts.ApplyValidated(cfgSpec.Options, changedOption, d)
+	changes += option.Config.Opts.ApplyValidated(om, changedOption, d)
 
 	log.WithField("count", changes).Debug("Applied changes to daemon's configuration")
 
