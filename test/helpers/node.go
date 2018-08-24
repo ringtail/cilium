@@ -159,7 +159,7 @@ func (s *SSHMeta) ExecWithParams(cmd string, cmdParams []string, options ...Exec
 	cmdStr := cmd
 	if len(cmdParams) > 0 {
 		for _, param := range cmdParams {
-			cmdStr += fmt.Sprintf("%q ", param)
+			cmdStr += fmt.Sprintf(" %q", param)
 		}
 	}
 
